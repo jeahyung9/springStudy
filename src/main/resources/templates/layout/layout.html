@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<th:block th:fragment="setContent(content)">
+	<style>
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		.header{
+			width: 100vw;
+			height: 20vh;
+			background-color: aqua;
+		}
+		.content{
+			width: 100vw;
+			height: 70vh;
+			background-color: gray;
+		}
+		.footer{
+			width: 100vw;
+			height: 10vh;
+			background-color: green;
+		}
+	</style>
+</th:block>
+</head>
+<body>
+<th:block th:fragment="setContent(content)">
+	<div class="header">
+		<h1>Header</h1>
+	</div>
+	<div class="content">
+		<th:block th:replace="${content}">
+		</th:block>
+	</div>
+	<div class="footer">
+		<h1>Footer</h1>
+	</div>
+</th:block>
+</body>
+</html>

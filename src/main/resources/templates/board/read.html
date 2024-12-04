@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<th:block th:replace="~{/layout/basic :: setContent(~{this::content})}">
+	<th:block th:fragment="content">
+		<h1 class="mt-4">게시글 리드 페이지</h1>
+		
+		<div class="form-group">
+			<label>비엔오</label>
+			<input type="text" class="form-control" name="bno" th:value="${dto.bno}" readonly="readonly">
+		</div>
+		<div class="form-group">
+			<label>타이틀</label>
+			<input type="text" class="form-control" name="title" th:value="${dto.title}" readonly="readonly">
+		</div>
+		<div class="form-group">
+			<label>컨텐트</label>
+			<textarea rows="5" cols="" class="form-control" name="content" readonly="readonly">[[${dto.content}]]</textarea>
+		</div>
+		<div class="form-group">
+			<label>라이터</label>
+			<input type="text" class="form-control" name="writerName" th:value="${dto.writerName}" readonly="readonly">
+		</div>
+		<div class="form-group">
+			<label>레그데이트</label>
+			<input type="text" class="form-control" name="regdate" th:value="${#temporals.format(dto.regdate, 'yyyy/MM/dd a h:mm')}" readonly="readonly">
+		</div>
+		<div class="form-group">
+			<label>모드데이트</label>
+			<input type="text" class="form-control" name="moddate" th:value="${#temporals.format(dto.moddate, 'yyyy/MM/dd a h:mm')}" readonly="readonly">
+		</div>
+		<span>
+			<a th:href="@{/board/modify(bno=${dto.bno}, page=${requestDTO.page})}">
+				<button class="btn btn-outline-primary">모디파이</button>
+			</a>
+		</span>
+		<span>
+			<a th:href="@{/board/list(page=${requestDTO.page})}">
+				<button class="btn btn-outline-primary">리스트</button>
+			</a>
+		</span>
+		
+		<!-- 댓글 수 확인 버튼 생성. -->
+		<div>
+			<div class="mt-4">
+				<h5>
+					<span style="cursor: pointer;" class="badge text-bg-primary badge-info addReply">애드 리플라이</span>
+				</h5>
+				<h5>
+					<span style="cursor: pointer;" class="badge rounded-pill text-bg-secondary replyCount">
+						리플라이 카운트 [[${dto.replyCount}]]
+					</span>
+				</h5>
+			</div>
+			<div class="list-group replyList">
+			</div>
+		</div>
+		
+		<div class="modal" tabindex="-1">
+         <div class="modal-dialog">
+            <div class="modal-content">
+               <div class="modal-header">
+                  <h5 class="modal-title">댓글 입력창</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                  <!-- 댓글 입력창 추가 -->
+	               <div class="form-group">
+	               		<input type="text" class="form-control" name="replyText" placeholder="리플라이 텍스트...">
+	               </div>
+	               <div class="form-group">
+	               		<input type="text" class="form-control" name="replyer" placeholder="리플라이어">
+	               </div>
+	               <input type="hidden" name="rno">
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary replyRemove" data-bs-dismiss="modal">리무브</button>
+                  <button type="button" class="btn btn-warning replyModify">모디파이</button>
+                  <button type="button" class="btn btn-warning replySave">세이브</button>
+                  <button type="button" class="btn btn-outline-secondary replyClose" data-bs-dismiss="modal">클로즈</button>
+               </div>
+            </div>
+         </div>
+      </div>
+      	<!-- 모달 창에 모든 내용을 입력 후에 save를 누르면 다음처럼 수행하도록 하세요.
+      		1. 클릭 이벤트를 거세요.
+      		
+      		2. 이벤트가 발생하면 데이터를 가져오는데, 필요 데이터는 다음과 같음.
+      			bno, text, replyer(이 모든 키는 ReplyDTO와 같음)
+      			즉 위 세개의 키 값을 get해서 자바 스크립트 일반 객체로 생성해서 변수에 담으세요.
+      			그리고 콘솔에 출력.
+      			
+      		3. 값이 모두 도출되었으면, ajax를 통해서 url:'/replies', method:post, contenttype 등
+      			ajax로 서버에 비동기 통신하는 메뉴얼을 찾아서 보내세요.
+      			
+      		4. 그리고 서버에서는 이를 받아서 처리하는 컨트롤러의 메서드를 정의하세요.
+      		4_1. 서버에서는 이 데이터를 모두 받아서 insert하고 결과를 json으로 rno 값을 리턴해줍니다.
+      		
+      		5. 위 비동기 통신을 이용하면 데이터를 보냄과 동시에 결과를 받는 콜백이 존재할 겁니다.
+      		이 콜백을 통해 데이터를 수신해서 insert 된 rno 값을 출력하세요.
+      	 -->
+		
+		<script th:inline="javascript">
+			//수정 버튼을 눌렀을때 요청을 보내도록 스크립트 정의
+			$('.replyModify').click(() => {
+				var rno = $('input[name="rno"]').val();
+				
+				let reply = {
+					rno : rno,
+					bno : $('input[name=bno]').val(),
+					text : $('input[name=replyText]').val(),
+					replyer : $('input[name=replyer]').val()
+				};
+				
+				$.ajax({
+					//요청 서비스 url 지정
+					url : '/replies/' + rno,
+					//메소드 타입 지정
+					type : 'PUT',
+					//요청 시 서버로 전달할 데이터 지정
+					data : JSON.stringify(reply),
+					//요청 성공 시 동작할 콜백 함수 지정
+					contentType : 'application/json; charset=utf-8',
+					success : (data) => {
+						alert('댓글 수정됨');
+						modal.modal('hide');
+						location.reload(true);
+					}
+				});
+			});
+			
+			//삭제 버튼을 눌렀을때 요청을 보내도록 스크립트 정의
+			$('.replyRemove').on('click', () => {
+				var rno = $('input[name="rno"]').val();
+				
+				$.ajax({
+					//요청 서비스 url 지정
+					url : '/replies/' + rno,
+					//메소드 타입 지정
+					type : 'DELETE',
+					//data : rno,
+					success : function(data) {
+						console.log(data);
+						if(data == 'success'){
+							alert("댓글이 잘 삭제됨");
+							modal.modal('hide');
+							location.reload(true);
+						}
+					}
+				});
+			});
+		
+			//특정 댓글을 클릭했을때 삭제와 수정을 할 수 있도록 스크립트 정의
+			$('.replyList').on('click', '.card-body', function(){
+				let rno = $(this).data("rno");//dataset : 모든 html 요소에 data-name="value"로 주면 이 값을 필요시에 찾아서 사용가능함
+				
+				//moadl을 띄울때 기존 내용을 가져와서 새로 띄어야 하기에 기존 값을 setting 합니다.
+				$('input[name=replyText]').val($(this).find('.card-title').html());
+				$('input[name=replyer]').val($(this).find('.card-subtitle').html());
+				$('input[name=rno]').val(rno);
+				
+				$('.modal-footer .btn').hide()
+				$('.replyRemove, .replyModify, .replyClose').show();
+				
+				modal.modal('show');
+			});
+			
+			//Add Reply 클릭시 모달창 띄우기
+			var modal = $('.modal');
+			
+			$('.addReply').click(function(){
+				modal.modal('show');
+			});
+			
+			$('.replySave').click(function(){
+				var writeReply = {
+						bno : $('input[name=bno]').val(),
+						text : $('input[name=replyText]').val(),
+						replyer : $('input[name=replyer]').val()
+				}
+				
+				$.ajax({
+					//요청 서비스 url 지정
+					url : '/replies',
+					//메소드 타입 지정
+					type : 'POST',
+					//요청 시 서버로 전달할 데이터 지정
+					data : JSON.stringify(writeReply),
+					//요청 성공 시 동작할 콜백 함수 지정
+					contentType : 'application/json; charset=utf-8',
+					success : function(data) {
+						alert('댓글 작성됨');
+						location.reload(true);
+					}
+				});
+				
+				//console.log(writeReply);
+				modal.modal('hide');
+			});
+			
+			//댓글 부분 초기화
+			$('input[name="replyText"]').val('');
+			$('input[name="replyer"]').val('');
+			
+			$('.modal-footer .btn').hide();//모달내의 모든 버튼 hide.
+			$('.replySave, .replyClose').show();
+		
+			$(document).ready(function(){
+				var bno = [[${dto.bno}]];
+				var listGroup = $(".replyList");
+				
+				function formatDate(str){
+					let date = new Date(str);
+					
+					return date.getFullYear() + "/" +
+					(date.getMonth() + 1) + "/" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes();
+				}
+				function loadJSONData(){
+					$.getJSON('/replies/board/' + bno, function(arr){
+						console.log(arr);
+						
+						var str = "";
+						
+						$('.replyCount').html(' 리플라이 카운트 ' + arr.length);
+						
+						$.each(arr, (idx, reply) => {
+							console.log(reply);
+							str += '<div class="card-body mb-3" data-rno="' + reply.rno + '">';
+		                 	str += '<div class="mb-2">';
+		                 	str += '<span>' + reply.rno + '</span>';
+		                	str += ' <b class="card-subtitle mb-2" style="display:inline">' + reply.replyer + '</b>';
+		                	str += ' <span class="card-text text-muted">(' + formatDate(reply.regdate) + ')</span>';
+		                	str += '</div>';
+		                	str += '<h5 class="card-title">' + reply.text + '</h5>';
+		                	str += '</div>';
+						});
+						listGroup.html(str);
+					});
+				}
+				
+				$(".replyCount").click(function(){
+					loadJSONData();
+					/* $.getJSON('/replies/board/' + bno, function(arr){
+						console.log(arr);
+					}); */
+				});
+				
+			});
+		</script>
+	</th:block>
+</th:block>
+</html>

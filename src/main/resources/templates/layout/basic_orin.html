@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="setContent(content)">
+	<head>
+		<title>Simple Side Bar By Boot Strap</title>
+		<link th:href="@{/vendor/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+	
+		<!-- custom css -->
+		<link th:href="@{/css/simple-sidebar.css}" rel="stylesheet">
+	</head>
+	
+	
+	<script th:src="@{/vendor/jquery/jquery.min.js}"></script>
+	<script th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js} "></script>
+
+<div class="container-fluid">
+	<th:block th:replace="${content}"></th:block>
+</div>
+</th:block>
+</html>
